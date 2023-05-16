@@ -11,9 +11,10 @@ def menu():
               \ra - Add a new product to the database
               \rb - Make a backup of the entire inventory
               \rv - View a single product's inventory
+              \rq - Quit
               ''')
         choice = input('\nWhat would you like to do?  ').lower()
-        if choice in ['a', 'b', 'v']:
+        if choice in ['a', 'b', 'v', 'q']:
             return choice
         else:
             input('''
@@ -48,7 +49,8 @@ def clean_date(date_str):
         year = int(split_date[2])
         default_date = datetime.date(year, month, day)
     except ValueError:
-        input('''===DATE ERROR===
+        input('''
+              \r====DATE ERROR===
               \rThe only format accept is (Ex: MM/DD/YYYY).
               \rPress enter to try again.
               ===================''')
@@ -79,7 +81,8 @@ def clean_quantity(quantity_str):
     try:
         quantity_integer = int(quantity_str)
     except ValueError:
-        input('''===QUANTITY ERROR===
+        input('''
+              \r=====QUANTITY ERROR======
               \rThe only format accept is a number (Ex: 22).
               \rPress enter to try again.
               \r======================''')
@@ -103,6 +106,45 @@ def add_csv_to_db():
                 session.add(new_product)
         session.commit()
 
+
+def add_product():
+    name = input('Product name: ')
+    
+    price_error = True
+    while price_error:
+        price = input('Product price (Ex: $33.19): ')
+        price = clean_price(price)
+        if type(price) == int:
+            price_error = False
+            
+    quantity_error = True
+    while quantity_error:
+        quantity = input('Product quantity: ')
+        quantity = clean_quantity(quantity)
+        if type(quantity) == int:
+            quantity_error = False     
+               
+    date = datetime.date.today()
+    
+    new_product = Product(product_name=name, product_price=price, product_quantity=quantity, date_updated=date)
+    
+    # check
+    product_in_db = session.query(Product).filter(Product.product_name==name).one_or_none()
+    
+    # if product not exist
+    if product_in_db == None:
+        session.add(new_product)
+        session.commit()
+        print('\nProduct added!')
+    
+    # if product exist
+    else:
+        product_in_db.product_quantity = new_product.product_quantity
+        product_in_db.product_price = new_product.product_price
+        product_in_db.date_updated = new_product.date_updated
+        session.commit()
+        print('\nProduct updated!')
+       
 
 def view_database():
     ids_available = []
@@ -135,10 +177,9 @@ def make_backup():
         header = ['Product Name', 'Product Price', 'Product Quantity', 'Date Updated']
         data_backup = csv.writer(file)
         data_backup.writerow(header)
-        
         for product in session.query(Product):
             file.write(f'{product.product_name}, {product.product_price}, {product.product_quantity}, {product.date_updated}\n')
-    print('Backup complete!')
+    print('\nBackup complete!')
 
 
 def app():
@@ -146,39 +187,19 @@ def app():
     while app_running:
         choice = menu()
         if choice == 'a':
-            
-            name = input('Product name: ')
-            
-            price_error = True
-            while price_error:
-                price = input('Product price (Ex: $33.19): ')
-                price = clean_price(price)
-                if type(price) == int:
-                    price_error = False
-    
-            quantity = int(input('Product quantity: '))
-            
-            date_error = True
-            while date_error:
-                date = input('Date (Ex: MM/DD/YYYY): ')
-                date = clean_date(date)
-                if type(date) == datetime.date:
-                    date_error = False
-            
-            new_product = Product(product_name=name, product_price=price, product_quantity=quantity, date_updated=date)
-            session.add(new_product)
-            session.commit()
+            add_product()
+            input('\nPress enter to return to the main menu.')
             
         elif choice == 'b':
             make_backup()
-            return app()
+            input('\nPress enter to return to the main menu.')
         
         elif choice == 'v':
             view_database()
-            return app()
+            input('\nPress enter to return to the main menu.')
 
         else:
-            print('Goodbye! Thank you for used the app.')
+            print('\nGoodbye! Thank you for used the app.')
             app_running = False
 
 
