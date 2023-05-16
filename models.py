@@ -3,7 +3,7 @@ from sqlalchemy import (create_engine, Column, Integer, String, Date)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 
-engine = create_engine('sqlite:///inventory.db', echo=True)
+engine = create_engine('sqlite:///inventory.db', echo=False)
 Session = sessionmaker(bind=engine)
 session = Session()
 Base = declarative_base()
