@@ -37,9 +37,10 @@ def clean_date(date_str):
         return return_date
 
 
-def clean_new_product_price(price_str):
+def clean_price(price_str):
     try:
-        price_float = float(price_str)
+        split_price = price_str.split('$')
+        return_price = int(float(split_price[1]) * 100)
     except ValueError:
         input('''
             \n****** PRICE ERROR ******
@@ -47,8 +48,9 @@ def clean_new_product_price(price_str):
             \rExample: 6.99
             \rPress enter to try again.
             \r************************''')
+        return
     else:
-        return int(price_float *100)
+        return return_price
 
 
 def clean_quantity(quantity_str):
@@ -65,14 +67,16 @@ def clean_quantity(quantity_str):
 def add_csv_to_db():
     with open('inventory.csv') as file:
         data = csv.reader(file)
+        next(data) # jump the title table
         for row in data:
-            print(row)
-            name = row[0]
-            price = clean_new_product_price(row[1])
-            quantity = clean_quantity(row[2])
-            date = clean_date(row[3])
-            new_product = Product(product_name=name, product_price=price, product_quantity=quantity, date_updated=date)
-            session.add(new_product)
+            product_in_db = session.query(Product).filter(Product.product_name==row[0]).one_or_none()
+            if product_in_db == None:
+                name = row[0]
+                price = clean_price(row[1])
+                quantity = clean_quantity(row[2])
+                date = clean_date(row[3])
+                new_product = Product(product_name=name, product_price=price, product_quantity=quantity, date_updated=date)
+                session.add(new_product)
         session.commit()
 
 
@@ -119,4 +123,4 @@ if __name__ == '__main__':
     add_csv_to_db()
     
     for product in session.query(Product):
-        print(product)
+        print(Product)
