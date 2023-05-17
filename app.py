@@ -111,7 +111,14 @@ def add_csv_to_db():
                 date = clean_date(row[3])
                 new_product = Product(product_name=name, product_price=price, product_quantity=quantity, date_updated=date)
                 session.add(new_product)
-        session.commit()
+                session.commit()
+            else:
+                # If product exist, check the date_updated and update the product most recently added
+                if row[3] > product_in_db.date_updated.strftime('%m/%d/%Y'):
+                    product_in_db.product_quantity = clean_quantity(row[2])
+                    product_in_db.product_price = clean_price(row[1])
+                    product_in_db.date_updated = clean_date(row[3])
+                    session.commit()
 
 
 # The add_product function is used to add a new product
